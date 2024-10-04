@@ -80,6 +80,42 @@ const operations: Operation[] = [
     method: "DELETE",
     fields: { id: "input" },
   },
+  {
+    name: "Get Catalog",
+    endpoint: "/api/catalog",
+    method: "GET",
+    fields: {},
+  },
+  {
+    name: "Add to Catalog",
+    endpoint: "/api/catalog",
+    method: "POST",
+    fields: { name: "input", category: "input", photoUrl: "input" },
+  },
+  {
+    name: "Remove from Catalog",
+    endpoint: "/api/catalog/:id",
+    method: "DELETE",
+    fields: { id: "input" },
+  },
+  {
+    name: "Get Favorites",
+    endpoint: "/api/favorites",
+    method: "GET",
+    fields: {},
+  },
+  {
+    name: "Favorite Item",
+    endpoint: "/api/favorites/:itemId",
+    method: "POST",
+    fields: { itemId: "input" },
+  },
+  {
+    name: "Unfavorite Item",
+    endpoint: "/api/favorites/:itemId",
+    method: "DELETE",
+    fields: { itemId: "input" },
+  },
   //
   // ...
   //
