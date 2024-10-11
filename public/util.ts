@@ -116,9 +116,120 @@ const operations: Operation[] = [
     method: "DELETE",
     fields: { itemId: "input" },
   },
-  //
-  // ...
-  //
+  {
+    name: "Update Username",
+    endpoint: "/api/users/username",
+    method: "PATCH",
+    fields: { username: "input" },
+  },
+  {
+    name: "Remove Friend",
+    endpoint: "/api/friends/:friend",
+    method: "DELETE",
+    fields: { friend: "input" },
+  },
+  {
+    name: "Get Friend Requests",
+    endpoint: "/api/friend/requests",
+    method: "GET",
+    fields: {},
+  },
+  {
+    name: "Send Friend Request",
+    endpoint: "/api/friend/requests/:to",
+    method: "POST",
+    fields: { to: "input" },
+  },
+  {
+    name: "Remove Friend Request",
+    endpoint: "/api/friend/requests/:to",
+    method: "DELETE",
+    fields: { to: "input" },
+  },
+  {
+    name: "Accept Friend Request",
+    endpoint: "/api/friend/accept/:from",
+    method: "PUT",
+    fields: { from: "input" },
+  },
+  {
+    name: "Reject Friend Request",
+    endpoint: "/api/friend/reject/:from",
+    method: "PUT",
+    fields: { from: "input" },
+  },
+  {
+    name: "Get Labels for Catalog Item",
+    endpoint: "/api/catalog/:itemId/labels",
+    method: "GET",
+    fields: { itemId: "input" },
+  },
+  {
+    name: "Add Label to Catalog Item",
+    endpoint: "/api/catalog/:itemId/labels",
+    method: "POST",
+    fields: { itemId: "input", label: "input" },
+  },
+  {
+    name: "Remove Label from Catalog Item",
+    endpoint: "/api/catalog/:itemId/labels/:label",
+    method: "DELETE",
+    fields: { itemId: "input", label: "input" },
+  },
+  {
+    name: "Get Messages",
+    endpoint: "/api/messages",
+    method: "GET",
+    fields: {},
+  },
+  {
+    name: "Send Message",
+    endpoint: "/api/messages",
+    method: "POST",
+    fields: { recipient: "input", content: "textarea" },
+  },
+  {
+    name: "Get Messages with Recipient",
+    endpoint: "/api/messages/:recipient",
+    method: "GET",
+    fields: { recipient: "input" },
+  },
+  {
+    name: "List an Item for Donation",
+    endpoint: "/api/donations/:itemId",
+    method: "POST",
+    fields: { itemId: "input" },
+  },
+  {
+    name: "Get User Donations",
+    endpoint: "/api/donations",
+    method: "GET",
+    fields: {},
+  },
+  {
+    name: "Remove an Item from Donation List",
+    endpoint: "/api/donations/:itemId",
+    method: "DELETE",
+    fields: { itemId: "input" },
+  },
+  {
+    name: "Update Donation Status (Mark as Donated)",
+    endpoint: "/api/donations/:itemId/status",
+    method: "PATCH",
+    fields: { itemId: "input" },
+  },
+  {
+    name: "Get Donation Status of an Item",
+    endpoint: "/api/donations/:itemId",
+    method: "GET",
+    fields: { itemId: "input" },
+  },
+  {
+    name: "Get User's Previously Donated Items",
+    endpoint: "/api/donations/donated",
+    method: "GET",
+    fields: { itemId: "input" },
+  },
 ];
 
 /*

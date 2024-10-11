@@ -2,12 +2,13 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Authing, Cataloging, Favoriting, Friending, Posting, Sessioning } from "./app";
+import { Authing, Cataloging, Donating, Favoriting, Friending, Labeling, Messaging, Posting, Sessioning } from "./app";
 import { PostOptions } from "./concepts/posting";
 import { SessionDoc } from "./concepts/sessioning";
 import Responses from "./responses";
 
 import { z } from "zod";
+import { CATEGORIES } from "./concepts/cataloging";
 
 /**
  * Web server routes for the app. Implements synchronizations between concepts.
@@ -162,7 +163,8 @@ class Routes {
 
   // Add an item to the user's catalog
   @Router.post("/catalog")
-  async addItemToCatalog(session: SessionDoc, name: string, category: string, photoUrl?: string) {
+  // @Router.validate(addItemSchema) // Use Zod validation
+  async addItemToCatalog(session: SessionDoc, name: string, category: (typeof CATEGORIES)[number], photoUrl?: string) {
     const user = Sessioning.getUser(session);
     return await Cataloging.addToCatalog(user, name, category, photoUrl);
   }
@@ -175,29 +177,29 @@ class Routes {
     return await Cataloging.removeFromCatalog(user, item);
   }
 
-  // // Get all labels for an item
-  // @Router.get("/catalog/:itemId/labels")
-  // async getLabels(session: SessionDoc, itemId: string) {
-  //   const user = Sessioning.getUser(session);
-  //   const item = new ObjectId(itemId);
-  //   return await Labeling.getLabels(item);
-  // }
+  // Get all labels for an item
+  @Router.get("/catalog/:itemId/labels")
+  async getLabels(session: SessionDoc, itemId: string) {
+    const user = Sessioning.getUser(session);
+    const item = new ObjectId(itemId);
+    return await Labeling.getLabels(item);
+  }
 
-  // // Add a label to an item
-  // @Router.post("/catalog/:itemId/labels")
-  // async addLabelToItem(session: SessionDoc, itemId: string, label: Label) {
-  //   const user = Sessioning.getUser(session);
-  //   const item = new ObjectId(itemId);
-  //   return await Labeling.addLabel(item, label);
-  // }
+  // Add a label to an item
+  @Router.post("/catalog/:itemId/labels")
+  async addLabelToItem(session: SessionDoc, itemId: string, label: string) {
+    const user = Sessioning.getUser(session);
+    const item = new ObjectId(itemId);
+    return await Labeling.addLabel(item, label);
+  }
 
-  // // Remove a label from an item
-  // @Router.delete("/catalog/:itemId/labels/:label")
-  // async removeLabelFromItem(session: SessionDoc, itemId: string, label: string) {
-  //   const user = Sessioning.getUser(session);
-  //   const item = new ObjectId(itemId);
-  //   return await Labeling.removeLabel(item, label);
-  // }
+  // Remove a label from an item
+  @Router.delete("/catalog/:itemId/labels/:label")
+  async removeLabelFromItem(session: SessionDoc, itemId: string, label: string) {
+    const user = Sessioning.getUser(session);
+    const item = new ObjectId(itemId);
+    return await Labeling.removeLabel(item, label);
+  }
 
   // Get all favorited items/posts for the user
   @Router.get("/favorites")
@@ -222,28 +224,79 @@ class Routes {
     return await Favoriting.unfavoriteItem(user, item);
   }
 
-  // // Get all messages for the user
-  // @Router.get("/messages")
-  // async getMessages(session: SessionDoc) {
-  //   const user = Sessioning.getUser(session);
-  //   return await Messaging.getMessages(user);
-  // }
+  // Get all messages for the user
+  @Router.get("/messages")
+  async getMessages(session: SessionDoc) {
+    const user = Sessioning.getUser(session);
+    return await Messaging.getMessages(user);
+  }
 
-  // // Send a message to another user
-  // @Router.post("/messages")
-  // async sendMessage(session: SessionDoc, recipient: string, content: string) {
-  //   const sender = Sessioning.getUser(session);
-  //   const recipientId = (await Authing.getUserByUsername(recipient))._id;
-  //   return await Messaging.sendMessage(sender, recipientId, content);
-  // }
+  // Send a message to another user
+  @Router.post("/messages")
+  async sendMessage(session: SessionDoc, recipient: string, content: string) {
+    const sender = Sessioning.getUser(session);
+    const recipientId = (await Authing.getUserByUsername(recipient))._id;
+    return await Messaging.sendMessage(sender, recipientId, content);
+  }
 
-  // // Get messages between the user and another user
-  // @Router.get("/messages/:recipient")
-  // async getMessagesWithRecipient(session: SessionDoc, recipient: string) {
-  //   const user = Sessioning.getUser(session);
-  //   const recipientId = (await Authing.getUserByUsername(recipient))._id;
-  //   return await Messaging.getMessagesBetween(user, recipientId);
-  // }
+  // Get messages between the user and another user
+  @Router.get("/messages/:recipient")
+  async getMessagesWithRecipient(session: SessionDoc, recipient: string) {
+    const user = Sessioning.getUser(session);
+    const recipientId = (await Authing.getUserByUsername(recipient))._id;
+    return await Messaging.getMessagesBetween(user, recipientId);
+  }
+
+  // List an item for donation
+  @Router.post("/donations/:itemId")
+  async listForDonation(session: SessionDoc, itemId: string) {
+    const user = Sessioning.getUser(session);
+    const itemObjectId = new ObjectId(itemId);
+    const result = await Donating.listForDonation(user, itemObjectId);
+    return result;
+  }
+
+  // Get all donation items for a user
+  @Router.get("/donations")
+  async getUserDonations(session: SessionDoc) {
+    const user = Sessioning.getUser(session);
+    const donations = await Donating.getListedItems(user);
+    return donations;
+  }
+
+  // Unlist a donation item
+  @Router.delete("/donations/:itemId")
+  async removeFromDonationList(session: SessionDoc, itemId: string) {
+    const user = Sessioning.getUser(session);
+    const itemObjectId = new ObjectId(itemId);
+    await Donating.unlistForDonation(user, itemObjectId);
+    return { msg: "Item removed from donation list" };
+  }
+
+  // Update the status of an item in the donation list
+  @Router.patch("/donations/:itemId/status")
+  async markAsDonated(session: SessionDoc, itemId: string) {
+    const user = Sessioning.getUser(session);
+    const itemObjectId = new ObjectId(itemId);
+    await Donating.markAsDonated(user, itemObjectId);
+    return { msg: "Donation status updated!" };
+  }
+
+  // Get status of a specific item (unlisted, listed, donated)
+  @Router.get("/donations/:itemId")
+  async getDonationStatus(session: SessionDoc, itemId: string) {
+    const user = Sessioning.getUser(session);
+    const itemObjectId = new ObjectId(itemId);
+    const donationStatus = await Donating.getDonationStatus(user, itemObjectId);
+    return donationStatus;
+  }
+
+  // Get all previously donated items for a user
+  @Router.get("/donations/donated")
+  async getDonatedItems(session: SessionDoc) {
+    const user = Sessioning.getUser(session);
+    return await Donating.getDonatedItems(user);
+  }
 }
 
 /** The web app. */

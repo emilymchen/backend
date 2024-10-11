@@ -1,11 +1,16 @@
 import { ObjectId } from "mongodb";
 import DocCollection, { BaseDoc } from "../framework/doc";
-import { NotFoundError } from "./errors";
+import { NotAllowedError, NotFoundError } from "./errors";
 
-export interface ItemDoc extends BaseDoc {
+// Predefined categories for clothing items
+export const CATEGORIES = ["tops", "bottoms", "shoes", "outerwear", "accessories", "one pieces"] as const;
+export type Category = (typeof CATEGORIES)[number];
+
+// Catalog item document structure
+export interface ClothingItemDoc extends BaseDoc {
   userId: ObjectId;
   name: string;
-  category: string;
+  category: Category;
   photoUrl?: string;
 }
 
@@ -13,13 +18,13 @@ export interface ItemDoc extends BaseDoc {
  * concept: Cataloging
  */
 export default class CatalogingConcept {
-  public readonly catalog: DocCollection<ItemDoc>;
+  public readonly catalog: DocCollection<ClothingItemDoc>;
 
   /**
    * Make an instance of Cataloging.
    */
   constructor(collectionName: string) {
-    this.catalog = new DocCollection<ItemDoc>(collectionName);
+    this.catalog = new DocCollection<ClothingItemDoc>(collectionName);
 
     // Create an index on userId to make queries for user catalogs more performant
     void this.catalog.collection.createIndex({ userId: 1 });
@@ -28,7 +33,11 @@ export default class CatalogingConcept {
   /**
    * adds a new item to a user's catalog
    */
-  async addToCatalog(userId: ObjectId, name: string, category: string, photoUrl?: string) {
+  async addToCatalog(userId: ObjectId, name: string, category: Category, photoUrl?: string) {
+    // Ensure the category is valid
+    if (!CATEGORIES.includes(category)) {
+      throw new NotAllowedError(`Invalid category: ${category}`);
+    }
     const _id = await this.catalog.createOne({ userId, name, category, photoUrl });
     return { msg: "Item added to catalog successfully!", item: await this.catalog.readOne({ _id }) };
   }
@@ -69,13 +78,13 @@ export default class CatalogingConcept {
   /**
    * updates an item in the user's catalog
    */
-  async updateItem(userId: ObjectId, itemId: ObjectId, name?: string, category?: string, photoUrl?: string) {
+  async updateItem(userId: ObjectId, itemId: ObjectId, name?: string, category?: Category, photoUrl?: string) {
     const item = await this.catalog.readOne({ _id: itemId, userId });
     if (!item) {
       throw new NotFoundError("Item not found in the user's catalog.");
     }
 
-    const updates: Partial<ItemDoc> = {};
+    const updates: Partial<ClothingItemDoc> = {};
     if (name) updates.name = name;
     if (category) updates.category = category;
     if (photoUrl) updates.photoUrl = photoUrl;
